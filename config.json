@@ -1,0 +1,13 @@
+{
+  "model_name": "llama3.2:1b",
+  "anomaly_threshold": 0.75,
+  "enable_vision": false,
+  "enable_audio_synth": true,
+  "max_entities": 3,
+  "check_interval_seconds": 2.0,
+  "idle_threshold_seconds": 15.0,
+  "anomaly_cooldown_seconds": 25.0,
+  "sound_volume": 0.35,
+  "debug_mode": false
+}
+
