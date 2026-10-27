@@ -51,7 +51,7 @@ class OverlayCanvas(QWidget):
         )
         self.setWindowFlags(flags)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setAttribute(Qt.WA_TransparentForInput, True)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
 
         # Cover combined virtual desktop geometry (multi-monitor support)
