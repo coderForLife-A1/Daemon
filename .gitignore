@@ -1,12 +1,24 @@
-# Byte-compiled / optimized / DLL files
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
 
-# C extensions
-*.so
+# Virtual environments and local Python configuration
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
 
-# Distribution / packaging
+# Build and packaging output
 .Python
 build/
 develop-eggs/
@@ -26,39 +38,28 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv/
-
-# Local Model Weights & Weights Cache (Crucial: never commit local GGUFs or checkpoints)
+# Local models and model caches
 models/*.gguf
 models/*.bin
 models/*.onnx
 *.safetensors
 .ollama/
 
-# Logs & System Temp Files
-*.log
+# Runtime output
 logs/
-*.sys
+*.log
 *.tmp
+*.wav
+*.mp3
 
-# User / OS specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-Desktop.ini
+# Secrets and machine-specific environment files
+.env
+.env.*
+!.env.example
+secrets.json
 
-# IDE & Editor configurations
-.vscode/
+# Editors and IDEs
+.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -69,28 +70,19 @@ Desktop.ini
 *.sublime-project
 *.sublime-workspace
 
-# Environment Variables / Credentials
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-secrets.json
-
-# Node / Electron specific (if mixing UI frameworks)
+# Node/Electron artifacts (if introduced later)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.pnpm-debug.log*
+# Operating-system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
