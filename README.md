@@ -1,102 +1,150 @@
-# 👻 Daemon: An AI-Powered Desktop Poltergeist
+# Daemon
 
-> **A presence-aware, system-integrated haunted overlay driven entirely by local, open-weight AI models.**
+> An AI-powered desktop poltergeist that reacts to your activity.
 
-Daemon turns your operating system into a reactive, atmospheric entity. Instead of relying on hardcoded timers or static jumpscares, Daemon continuously processes real-time system telemetry, active process states, and ambient presence to dynamically orchestrate contextual audio-visual anomalies across your desktop.
+Daemon is a local Python application that turns desktop telemetry into
+atmospheric audio and visual anomalies. It monitors signals such as system
+load, the active window, keyboard/mouse inactivity, and ambient audio, then
+uses an orchestrator to decide when to display an effect or play a sound.
 
----
+The optional Ollama integration generates context-aware whispers. If Ollama is
+unavailable, Daemon uses a built-in procedural fallback, so the core experience
+does not require a cloud service or API key.
 
-## 🏗 System Architecture
+## Features
 
-Daemon operates as a lightweight background architecture with zero cloud dependencies:
-┌─────────────────────────┐     ┌──────────────────────────────┐
-│  Telemetry & Sensors    │     │      Local AI Engine         │
-│  - System Load / RAM    ├────►│  - Ollama / llama.cpp        │
-│  - Active Window Title  │     │  - Vision / Presence Model   │
-│  - Ambient Noise / Mic  │     │  - Open-Weight Audio Classifier│
-└───────────┬─────────────┘     └──────────────┬───────────────┘
-│                                  │
-▼                                  ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  Daemon Orchestrator                         │
-│  - State Machine & Anomaly Trigger Engine                    │
-└───────────┬──────────────────────────────────┬───────────────┘
-│                                  │
-▼                                  ▼
-┌─────────────────────────┐     ┌──────────────────────────────┐
-│  Transparent OS Canvas  │     │  Spatial Audio Generator     │
-│  - Screen Crawlers      │     │  - Dynamic Thermal Hiss      │
-│  - Terminal Injections  │     │  - Ambient Whispers          │
-└─────────────────────────┘     └──────────────────────────────┘
+- Presence-aware anomaly triggers based on activity and system telemetry.
+- Transparent, multi-monitor overlay effects:
+  whispers, crawlers, glitches, and watchers.
+- Procedural audio synthesis with configurable volume.
+- Optional local LLM support through [Ollama](https://ollama.com/).
+- System-tray controls and a headless fallback when no tray is available.
+- Command-line options for testing effects and overriding configuration.
 
+## How it works
 
----
-## ✨ Features
+```text
+Telemetry sensors ──┐
+                    ├──> Orchestrator ──> Overlay effects
+Local AI (optional) ┘             └──────> Audio synthesis
+                                      └──> System tray
+```
 
-* **👁 Presence-Aware Anomalies:** Monitors user activity and ambient inputs to trigger entities when attention shifts.
-* **🧠 Context-Aware Whispers:** Leverages local open-weight LLMs (e.g., `Llama-3.2-1B` / `Qwen2.5`) to parse system logs or window titles and generate eerie, context-aware commentary.
-* **🖥 Transparent Desktop Canvas:** Renders fluid, non-blocking visual entities across multi-monitor setups directly over active windows.
-* **⚡ 100% Air-Gapped & Local:** Zero external API keys, zero network tracking, and complete privacy preservation—all inference happens locally on device hardware.
+## Requirements
 
----
+- Python 3.11 or newer.
+- A desktop environment supported by Qt/PySide6.
+- An audio output device for sound effects.
+- [Ollama](https://ollama.com/) is optional. Install it only if you want
+  locally generated, context-aware whispers.
 
-## 🛠 Tech Stack
+The project currently targets desktop use on Windows. Some telemetry and audio
+features may require additional permissions or platform-specific audio
+drivers.
 
-* **Core Engine:** Python 3.11+ / Node.js
-* **Local Inference:** `llama.cpp` / Ollama / TensorFlow.js / ONNX Runtime
-* **OS Interfacing & Visual Overlay:** PySide6 (Qt) / Electron Transparent Window / `psutil`
-* **Audio Processing:** PyAudio / Wave / Custom Audio Synth
+## Installation
 
----
+Clone the repository and create a virtual environment:
 
-## 🚀 Quickstart
+```powershell
+git clone https://github.com/coderForLife-A1/Daemon.git
+cd Daemon
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-### Prerequisites
+Install the Python dependencies:
 
-1. Ensure Python 3.11+ is installed.
-2. Install [Ollama](https://ollama.ai/) and pull a lightweight model:
-   '''bash
-   ollama pull llama3.2:1b
-   '''
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-Installation
-Clone the repository:
+If PowerShell prevents activation, you can run the environment's interpreter
+directly instead:
 
-'''bash
-git clone [https://github.com/your-username/daemon.git](https://github.com/your-username/daemon.git)
-cd daemon
-'''
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-Create and activate a virtual environment:
-'''bash
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-'''
-Install dependencies:
+### Optional Ollama setup
 
-'''bash
-pip install -r requirements.txt
-Run the Daemon engine:
-'''
+Install Ollama, start its local service, and pull the model configured in
+[`config.json`](config.json):
 
-'''bash
+```powershell
+ollama pull llama3.2:1b
+```
+
+Daemon still starts without Ollama and falls back to procedural whispers.
+
+## Usage
+
+Start Daemon with the default configuration:
+
+```powershell
 python main.py
-'''
+```
 
-⚙️ Configuration
-Control entity frequency, aggressive triggers, and model bindings via config.json:
+Useful command-line options:
 
-JSON
-{
-  "model_name": "llama3.2:1b",
-  "anomaly_threshold": 0.75,
-  "enable_vision": false,
-  "enable_audio_synth": true,
-  "max_entities": 3
-}
+| Option | Description |
+| --- | --- |
+| `--config PATH` | Load a different JSON configuration file. |
+| `--threshold VALUE` | Override the anomaly threshold (`0.0`–`1.0`). |
+| `--no-audio` | Disable audio synthesis for the current run. |
+| `--no-overlay` | Run telemetry and orchestration without the visual overlay. |
+| `--test-anomaly TYPE` | Trigger `whisper`, `crawler`, `glitch`, or `watcher` on startup. |
+| `--debug` | Enable verbose diagnostic telemetry output. |
 
-📜 License
-Distributed under the MIT License. See LICENSE for details.
+For example, to test an effect without audio:
+
+```powershell
+python main.py --no-audio --test-anomaly glitch
+```
+
+Stop the application with `Ctrl+C` or use the system-tray menu.
+
+## Configuration
+
+Runtime defaults are stored in [`config.json`](config.json). The main settings
+are:
+
+| Setting | Purpose |
+| --- | --- |
+| `model_name` | Ollama model used for whispers. |
+| `anomaly_threshold` | Tension score required to trigger an anomaly. |
+| `enable_vision` | Enable local camera presence sensing when supported. |
+| `enable_audio_synth` | Enable procedural sound effects. |
+| `max_entities` | Maximum simultaneous overlay entities. |
+| `check_interval_seconds` | Telemetry polling interval. |
+| `idle_threshold_seconds` | Inactivity period before the idle state begins. |
+| `anomaly_cooldown_seconds` | Minimum delay between major anomalies. |
+| `sound_volume` | Master volume from `0.0` to `1.0`. |
+| `debug_mode` | Enable diagnostic telemetry logging. |
+
+The configuration is validated with Pydantic. Invalid or missing configuration
+files fall back to the built-in defaults.
+
+## Development
+
+Run the test suite from the repository root:
+
+```powershell
+python -m pytest
+```
+
+The tests cover configuration, orchestration, overlay effects, audio
+synthesis, AI behavior, and telemetry components.
+
+## Privacy
+
+Daemon is designed to run locally. It reads desktop telemetry and may take
+short ambient-audio samples when the audio sensor is enabled. Audio samples
+are analyzed in memory and are not intentionally uploaded or persisted.
+Review and adjust the telemetry and audio settings before running Daemon in a
+shared or sensitive environment.
+
+## License
+
+Distributed under the [MIT License](LICENSE).
