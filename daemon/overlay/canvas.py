@@ -167,7 +167,7 @@ class OverlayCanvas(QWidget):
         self.effects.append(effect)
         self.update()
 
-    def spawn_glitch(self, intensity: float = 0.8, duration: float = 0.7) -> None:
+    def spawn_glitch(self, intensity: float = 1.0, duration: float = 2.6) -> None:
         if len(self.effects) >= self.max_entities:
             self.effects.pop(0)
 
