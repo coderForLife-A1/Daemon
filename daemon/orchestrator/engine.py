@@ -146,14 +146,14 @@ class DaemonOrchestrator(QObject):
             self.canvas.spawn_crawler(bounds=bounds)
 
         if self.synth:
-            self.synth.trigger_anomaly_stinger("glitch")
+            self.synth.trigger_anomaly_stinger("crawler")
 
         self.anomaly_triggered.emit("crawler", "Screen perimeter crawler spawned")
 
     def trigger_glitch(self) -> None:
         """Trigger CRT screen glitch artifact."""
         if self.canvas:
-            self.canvas.spawn_glitch(intensity=0.85)
+            self.canvas.spawn_glitch(intensity=1.0, duration=2.6)
 
         if self.synth:
             self.synth.trigger_anomaly_stinger("glitch")

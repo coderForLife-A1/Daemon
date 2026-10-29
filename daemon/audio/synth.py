@@ -78,17 +78,18 @@ class AudioSynth:
         if not self.enabled:
             return
 
-        duration = 0.6 if kind == "glitch" else 1.2
+        duration = 2.0 if kind == "glitch" else 1.2
         t = np.linspace(0, duration, int(self.sample_rate * duration), endpoint=False)
 
         if kind == "glitch":
-            # Rapid frequency modulated down-chirp + crackle
-            freq = 600 * np.exp(-t * 6.0) + 120
-            tone = 0.4 * np.sin(2 * np.pi * freq * t)
-            noise = (np.random.rand(len(t)) - 0.5) * 0.3 * np.exp(-t * 4.0)
-            # Granular pops
-            pops = (np.random.rand(len(t)) > 0.98).astype(np.float32) * (np.random.rand(len(t)) - 0.5) * 0.8
-            stinger = (tone + noise + pops) * np.exp(-t * 3.5)
+            # Initial sudden frequency modulated down-chirp + receding granular static crackle
+            freq = 700 * np.exp(-t * 5.0) + 90
+            tone = 0.35 * np.sin(2 * np.pi * freq * t) * np.exp(-t * 2.5)
+            noise = (np.random.rand(len(t)) - 0.5) * 0.35 * np.exp(-t * 1.2)
+            # Granular pops decaying over time
+            pop_threshold = 0.96 + 0.035 * (t / duration)
+            pops = (np.random.rand(len(t)) > pop_threshold).astype(np.float32) * (np.random.rand(len(t)) - 0.5) * 0.9 * np.exp(-t * 1.5)
+            stinger = tone + noise + pops
         elif kind == "whisper":
             # Spectral breath / resonant whisper murmur
             noise = (np.random.rand(len(t)) - 0.5)
@@ -96,6 +97,16 @@ class AudioSynth:
             envelope = np.sin(np.pi * t / duration) ** 2
             f1 = 440 + 80 * np.sin(2 * np.pi * 3.0 * t)
             stinger = noise * np.sin(2 * np.pi * f1 * t) * envelope * 0.4
+        elif kind == "crawler":
+            # Skittering chitinous chitter / rapid claw clicks on glass
+            duration = 1.8
+            t = np.linspace(0, duration, int(self.sample_rate * duration), endpoint=False)
+            tap_rate = 18.0
+            tap_envelope = np.maximum(0.0, np.sin(2 * np.pi * tap_rate * t)) ** 10
+            clicks = (np.random.rand(len(t)) - 0.5) * tap_envelope * 0.7
+            f_res = 2200 + 400 * np.sin(2 * np.pi * 6.0 * t)
+            scrape = np.sin(2 * np.pi * f_res * t) * clicks * 0.5
+            stinger = (clicks + scrape) * np.exp(-t * 1.1)
         else:
             # Sub bass drop
             freq = 90 * np.exp(-t * 2.0) + 35

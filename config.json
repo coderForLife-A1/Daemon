@@ -1,6 +1,6 @@
 {
-  "model_name": "llama3.2:1b",
-  "anomaly_threshold": 0.75,
+  "model_name": "phi3:mini",
+  "anomaly_threshold": 0.1,
   "enable_vision": false,
   "enable_audio_synth": true,
   "max_entities": 3,
@@ -10,4 +10,3 @@
   "sound_volume": 0.35,
   "debug_mode": false
 }
-

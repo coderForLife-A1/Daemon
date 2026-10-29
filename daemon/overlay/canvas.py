@@ -145,29 +145,54 @@ class OverlayCanvas(QWidget):
         self,
         target_edge: Optional[str] = None,
         bounds: Optional[tuple] = None,
-        duration: float = 6.0
+        duration: float = 7.5,
+        swarm: bool = True,
     ) -> None:
-        if len(self.effects) >= self.max_entities:
-            self.effects.pop(0)
-
         w, h = self.width(), self.height()
         edges = ["top", "bottom", "left", "right"]
         edge = target_edge or random.choice(edges)
 
+        # Place crawler visibly at screen boundary with velocity pointed inwards
         if edge == "top":
-            x, y = random.uniform(50, w - 50), -20
+            x, y = random.uniform(w * 0.2, w * 0.8), 20
         elif edge == "bottom":
-            x, y = random.uniform(50, w - 50), h + 20
+            x, y = random.uniform(w * 0.2, w * 0.8), h - 30
         elif edge == "left":
-            x, y = -20, random.uniform(50, h - 50)
+            x, y = 30, random.uniform(h * 0.2, h * 0.8)
         else:
-            x, y = w + 20, random.uniform(50, h - 50)
+            x, y = w - 40, random.uniform(h * 0.2, h * 0.8)
 
-        effect = ScreenCrawlerEffect(start_x=x, start_y=y, target_edge=edge, bounds=bounds, duration=duration)
+        # Main articulated crawler
+        effect = ScreenCrawlerEffect(
+            start_x=x,
+            start_y=y,
+            target_edge=edge,
+            bounds=bounds,
+            duration=duration,
+            body_scale=1.1,
+        )
         self.effects.append(effect)
+
+        # Spawn companion swarm critters nearby
+        if swarm:
+            for _ in range(random.randint(1, 2)):
+                sub_crawler = ScreenCrawlerEffect(
+                    start_x=x + random.uniform(-60, 60),
+                    start_y=y + random.uniform(-60, 60),
+                    target_edge=edge,
+                    bounds=bounds,
+                    duration=duration * random.uniform(0.8, 1.05),
+                    body_scale=random.uniform(0.55, 0.75),
+                )
+                self.effects.append(sub_crawler)
+
+        # Ensure we don't blow past max entities while keeping crawlers
+        while len(self.effects) > max(self.max_entities, 8):
+            self.effects.pop(0)
+
         self.update()
 
-    def spawn_glitch(self, intensity: float = 0.8, duration: float = 0.7) -> None:
+    def spawn_glitch(self, intensity: float = 1.0, duration: float = 2.6) -> None:
         if len(self.effects) >= self.max_entities:
             self.effects.pop(0)
 
