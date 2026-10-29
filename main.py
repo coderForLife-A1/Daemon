@@ -48,6 +48,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--threshold", type=float, help="Override anomaly tension threshold (0.0 - 1.0)")
     parser.add_argument("--no-audio", action="store_true", help="Disable audio synthesis")
     parser.add_argument("--no-overlay", action="store_true", help="Run without transparent visual overlay")
+    parser.add_argument("--gui", action="store_true", help="Launch the desktop control center window")
     parser.add_argument("--test-anomaly", choices=["whisper", "crawler", "glitch", "watcher"], help="Trigger a test anomaly on startup")
     parser.add_argument("--debug", action="store_true", help="Enable verbose telemetry output in console")
     return parser.parse_args()
@@ -65,6 +66,20 @@ def main() -> int:
         config.enable_audio_synth = False
     if args.debug:
         config.debug_mode = True
+
+    # If --gui is selected, launch desktop control app
+    if args.gui:
+        app = QApplication(sys.argv)
+        app.setApplicationName("Daemon")
+        signal.signal(signal.SIGINT, lambda *_: QApplication.quit())
+        sig_timer = QTimer()
+        sig_timer.timeout.connect(lambda: None)
+        sig_timer.start(500)
+
+        from daemon.ui import DaemonDashboard
+        window = DaemonDashboard(config=config)
+        window.show()
+        return app.exec()
 
     print_banner(console, config)
 
