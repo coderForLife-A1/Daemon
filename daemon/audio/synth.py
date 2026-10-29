@@ -97,6 +97,16 @@ class AudioSynth:
             envelope = np.sin(np.pi * t / duration) ** 2
             f1 = 440 + 80 * np.sin(2 * np.pi * 3.0 * t)
             stinger = noise * np.sin(2 * np.pi * f1 * t) * envelope * 0.4
+        elif kind == "crawler":
+            # Skittering chitinous chitter / rapid claw clicks on glass
+            duration = 1.8
+            t = np.linspace(0, duration, int(self.sample_rate * duration), endpoint=False)
+            tap_rate = 18.0
+            tap_envelope = np.maximum(0.0, np.sin(2 * np.pi * tap_rate * t)) ** 10
+            clicks = (np.random.rand(len(t)) - 0.5) * tap_envelope * 0.7
+            f_res = 2200 + 400 * np.sin(2 * np.pi * 6.0 * t)
+            scrape = np.sin(2 * np.pi * f_res * t) * clicks * 0.5
+            stinger = (clicks + scrape) * np.exp(-t * 1.1)
         else:
             # Sub bass drop
             freq = 90 * np.exp(-t * 2.0) + 35
