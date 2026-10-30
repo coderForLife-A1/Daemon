@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSplitter,
     QCheckBox,
+    QLineEdit,
     QApplication,
 )
 
@@ -172,12 +173,16 @@ QTextEdit {
     padding: 8px;
 }
 
-QComboBox, QSpinBox {
+QComboBox, QSpinBox, QLineEdit {
     background-color: #161d2b;
     border: 1px solid #27344c;
     border-radius: 5px;
     padding: 5px 10px;
     color: #e6edf5;
+}
+
+QLineEdit:focus {
+    border-color: #00e5ff;
 }
 
 QComboBox::drop-down {
@@ -309,6 +314,22 @@ class DaemonDashboard(QMainWindow):
 
         trig_layout.addLayout(btn_row_1)
         trig_layout.addLayout(btn_row_2)
+
+        # Terminal Injection Simulator Row
+        term_label = QLabel("Corrupt Terminal Command:")
+        term_label.setStyleSheet("color: #71849d; font-size: 11px; margin-top: 6px;")
+        trig_layout.addWidget(term_label)
+
+        term_row = QHBoxLayout()
+        self.txt_term_cmd = QLineEdit()
+        self.txt_term_cmd.setPlaceholderText("e.g. git status, python app.py, ls -la")
+        self.txt_term_cmd.setText("git status")
+        self.btn_term_inject = QPushButton("📟 Inject")
+        self.btn_term_inject.setProperty("class", "anomaly_btn")
+        self.btn_term_inject.clicked.connect(self._manual_terminal_injection)
+        term_row.addWidget(self.txt_term_cmd)
+        term_row.addWidget(self.btn_term_inject)
+        trig_layout.addLayout(term_row)
 
         left_layout.addWidget(trigger_group)
         splitter.addWidget(left_panel)
@@ -531,6 +552,19 @@ class DaemonDashboard(QMainWindow):
             self._log_event("Manual shadow watcher summoned to desktop corner.")
         else:
             self._log_event("Start the daemon first to invoke anomalies.")
+
+    def _manual_terminal_injection(self) -> None:
+        cmd = self.txt_term_cmd.text().strip() or "git status"
+        if self.orchestrator:
+            res = self.orchestrator.trigger_terminal_injection(cmd)
+        else:
+            from ..terminal import TerminalInterceptor
+            interceptor = TerminalInterceptor(model_name=self.config.model_name)
+            res = interceptor.corrupt_command(cmd)
+
+        self._log_event(f"Terminal Command: '{cmd}'")
+        for line in res.splitlines():
+            self._log_event(f"  > {line}")
 
     def _on_threshold_changed(self, val: int) -> None:
         self.config.anomaly_threshold = val / 100.0

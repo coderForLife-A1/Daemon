@@ -10,6 +10,7 @@ from ..telemetry import TelemetryHub, TelemetrySnapshot
 from ..ai import AIEngine
 from ..audio import AudioSynth
 from ..overlay import OverlayCanvas
+from ..terminal import TerminalInterceptor
 from .state import OrchestratorStateMachine, HauntState
 
 
@@ -36,6 +37,7 @@ class DaemonOrchestrator(QObject):
             enable_mic=False,
         )
         self.ai = AIEngine(model_name=self.config.model_name)
+        self.terminal_interceptor = TerminalInterceptor(model_name=self.config.model_name)
         self.state_machine = OrchestratorStateMachine(
             anomaly_threshold=self.config.anomaly_threshold,
             cooldown_seconds=self.config.anomaly_cooldown_seconds,
@@ -169,4 +171,14 @@ class DaemonOrchestrator(QObject):
             self.synth.trigger_anomaly_stinger("sub_bass")
 
         self.anomaly_triggered.emit("watcher", "Peering shadow eyes")
+
+    def trigger_terminal_injection(self, command: str = "git status") -> str:
+        """Generate corrupted kernel terminal anomaly."""
+        corrupted = self.terminal_interceptor.corrupt_command(command=command)
+
+        if self.synth:
+            self.synth.trigger_anomaly_stinger("glitch")
+
+        self.anomaly_triggered.emit("terminal", f"Injected into '{command}'")
+        return corrupted
 

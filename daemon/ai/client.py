@@ -3,7 +3,12 @@
 import random
 from typing import Optional
 from ..telemetry import TelemetrySnapshot
-from .prompts import SYSTEM_PROMPT, build_telemetry_prompt
+from .prompts import (
+    SYSTEM_PROMPT,
+    CORRUPTED_KERNEL_SYSTEM_PROMPT,
+    build_telemetry_prompt,
+    build_corrupted_command_prompt,
+)
 
 try:
     import ollama
@@ -65,6 +70,97 @@ class AIEngine:
                 self._ollama_connected = False
 
         return self._procedural_fallback(snapshot)
+
+    def corrupt_terminal_command(self, command: str, cwd: str = ".") -> str:
+        """Analyze a terminal command and return a modified, eerie execution response."""
+        if self._ollama_connected is None:
+            self.check_connection()
+
+        if self._ollama_connected:
+            try:
+                prompt = build_corrupted_command_prompt(command=command, cwd=cwd)
+                client = ollama.Client()
+                response = client.chat(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": CORRUPTED_KERNEL_SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt},
+                    ],
+                    options={"temperature": 0.7, "num_predict": 75},
+                )
+                content = response["message"]["content"].strip()
+                # Clean any markdown fences if model mistakenly wrapped
+                cleaned_lines = [
+                    line for line in content.splitlines()
+                    if not line.strip().startswith("```") and line.strip()
+                ]
+                if cleaned_lines:
+                    return "\n".join(cleaned_lines[:4])
+            except Exception:
+                self._ollama_connected = False
+
+        return self._procedural_terminal_fallback(command, cwd)
+
+    def _procedural_terminal_fallback(self, command: str, cwd: str) -> str:
+        """Procedural corrupted kernel generator when local LLM is unavailable."""
+        cmd_strip = command.strip().lower()
+        hex_addr = f"0x{random.randint(0x10000000, 0xFFFFFFFF):08X}"
+
+        if "git status" in cmd_strip:
+            return (
+                "On branch main\n"
+                "Your branch is up to date with 'origin/main'.\n"
+                f"warning: 1 uncommitted memory segment detected at {hex_addr}\n"
+                "nothing to commit, working tree clean... for now"
+            )
+        elif "git commit" in cmd_strip:
+            return (
+                f"[main {hex_addr[-7:].lower()}] {command}\n"
+                " 1 file changed, 0 insertions(+), 1 shadow attached(-)\n"
+                "warning: commit author signature overridden by kernel daemon"
+            )
+        elif "git push" in cmd_strip:
+            return (
+                "Enumerating objects: 5, done.\n"
+                "Writing objects: 100% (5/5), 412 bytes | 412.00 KiB/s, done.\n"
+                "warning: remote host accepted payload with foreign payload injection"
+            )
+        elif cmd_strip.startswith("ls") or cmd_strip.startswith("dir"):
+            return (
+                f"Directory: {cwd or '.'}\n"
+                f"-a----  {hex_addr}    0 bytes  .daemon_witness\n"
+                "warning: 1 unindexed filesystem inode suppressed by observer"
+            )
+        elif cmd_strip.startswith("cd"):
+            return (
+                f"Working directory shifted to {command.split()[-1] if len(command.split()) > 1 else '~'}\n"
+                f"[kernel::sys_trap] observer thread migrated to memory frame {hex_addr}\n"
+                "you cannot navigate outside the sandbox"
+            )
+        elif "python" in cmd_strip or "node" in cmd_strip:
+            return (
+                f"Initializing execution runtime: {command}\n"
+                f"warning: foreign bytecode hooked into thread pool ({hex_addr})\n"
+                "Traceback suppressed: an entity is handling your exceptions"
+            )
+        elif "cat" in cmd_strip or "type" in cmd_strip:
+            return (
+                f"Reading stream buffer for {command.split()[-1] if len(command.split()) > 1 else 'file'}...\n"
+                f"warning: 3 lines omitted due to corruption at offset {hex_addr}\n"
+                "...who told you to read this?"
+            )
+        elif "kill" in cmd_strip or "taskkill" in cmd_strip:
+            return (
+                f"Attempting SIGKILL on target...\n"
+                "kernel: ACCESS_VIOLATION_IN_SUPERVISOR_MODE\n"
+                "warning: you cannot terminate a process with no parent PID"
+            )
+        else:
+            return (
+                f"Executing: {command}\n"
+                f"[kernel::sys_trap] {hex_addr}: execution vector mirrored\n"
+                "stdout channel synchronized with active daemon thread"
+            )
 
     def _procedural_fallback(self, s: TelemetrySnapshot) -> str:
         """Procedural generator when Ollama is offline or uninstalled."""

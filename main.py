@@ -49,7 +49,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-audio", action="store_true", help="Disable audio synthesis")
     parser.add_argument("--no-overlay", action="store_true", help="Run without transparent visual overlay")
     parser.add_argument("--gui", action="store_true", help="Launch the desktop control center window")
-    parser.add_argument("--test-anomaly", choices=["whisper", "crawler", "glitch", "watcher"], help="Trigger a test anomaly on startup")
+    parser.add_argument("--terminal-inject", type=str, help="Corrupt and execute a terminal command through Daemon")
+    parser.add_argument("--powershell-hook", action="store_true", help="Print PowerShell profile integration snippet")
+    parser.add_argument("--test-anomaly", choices=["whisper", "crawler", "glitch", "watcher", "terminal"], help="Trigger a test anomaly on startup")
     parser.add_argument("--debug", action="store_true", help="Enable verbose telemetry output in console")
     return parser.parse_args()
 
@@ -66,6 +68,19 @@ def main() -> int:
         config.enable_audio_synth = False
     if args.debug:
         config.debug_mode = True
+
+    # If --terminal-inject is requested, run and output directly
+    if args.terminal_inject:
+        from daemon.terminal import TerminalInterceptor
+        interceptor = TerminalInterceptor(model_name=config.model_name)
+        print(interceptor.corrupt_command(args.terminal_inject))
+        return 0
+
+    # If --powershell-hook is requested, output hook snippet
+    if args.powershell_hook:
+        from daemon.terminal.interceptor import TerminalInterceptor
+        print(TerminalInterceptor.get_powershell_hook_script())
+        return 0
 
     # If --gui is selected, launch desktop control app
     if args.gui:
@@ -132,6 +147,8 @@ def main() -> int:
                 orchestrator.trigger_glitch()
             elif args.test_anomaly == "watcher":
                 orchestrator.trigger_watcher()
+            elif args.test_anomaly == "terminal":
+                orchestrator.trigger_terminal_injection("git status")
 
         QTimer.singleShot(1000, run_test)
 

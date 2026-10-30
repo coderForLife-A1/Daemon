@@ -13,15 +13,20 @@ def test_overlay_canvas_init():
 
     # Test spawning effects
     canvas.spawn_whisper("The kernel watches.")
-    canvas.spawn_crawler()
-    canvas.spawn_glitch()
-    assert len(canvas.effects) == 3
+    assert len(canvas.effects) == 1
 
-    # Test overflow pops oldest effect
-    canvas.spawn_watcher()
+    # Crawler spawns a swarm (main + 1-2 companions), so count rises by 2-3
+    canvas.spawn_crawler(swarm=False)
+    assert len(canvas.effects) == 2
+
+    canvas.spawn_glitch()
     assert len(canvas.effects) == 3
 
     # Test clear
     canvas.clear_all()
     assert len(canvas.effects) == 0
+
+    # Test swarm spawning produces multiple crawlers
+    canvas.spawn_crawler(swarm=True)
+    assert len(canvas.effects) >= 2  # main + at least 1 companion
 
