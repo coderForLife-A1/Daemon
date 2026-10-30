@@ -46,7 +46,6 @@ class OverlayCanvas(QWidget):
             | Qt.FramelessWindowHint
             | Qt.WindowStaysOnTopHint
             | Qt.Tool
-            | Qt.WindowTransparentForInput
             | Qt.WindowDoesNotAcceptFocus
         )
         self.setWindowFlags(flags)

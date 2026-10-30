@@ -72,6 +72,9 @@ class DaemonTrayIcon(QSystemTrayIcon):
         act_watcher = test_menu.addAction("Shadow Watcher")
         act_watcher.triggered.connect(lambda: self.orchestrator.trigger_watcher())
 
+        act_term = test_menu.addAction("Terminal Injection")
+        act_term.triggered.connect(lambda: self.orchestrator.trigger_terminal_injection("git status"))
+
         menu.addSeparator()
 
         # Pause toggle
