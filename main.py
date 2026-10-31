@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gui", action="store_true", help="Launch the desktop control center window")
     parser.add_argument("--terminal-inject", type=str, help="Corrupt and execute a terminal command through Daemon")
     parser.add_argument("--powershell-hook", action="store_true", help="Print PowerShell profile integration snippet")
-    parser.add_argument("--test-anomaly", choices=["whisper", "crawler", "glitch", "watcher", "terminal"], help="Trigger a test anomaly on startup")
+    parser.add_argument("--test-anomaly", choices=["whisper", "crawler", "glitch", "watcher", "terminal", "auto_typing"], help="Trigger a test anomaly on startup")
     parser.add_argument("--debug", action="store_true", help="Enable verbose telemetry output in console")
     return parser.parse_args()
 
@@ -149,6 +149,8 @@ def main() -> int:
                 orchestrator.trigger_watcher()
             elif args.test_anomaly == "terminal":
                 orchestrator.trigger_terminal_injection("git status")
+            elif args.test_anomaly == "auto_typing":
+                orchestrator.trigger_auto_typing()
 
         QTimer.singleShot(1000, run_test)
 
@@ -159,4 +161,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

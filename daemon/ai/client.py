@@ -6,6 +6,8 @@ from ..telemetry import TelemetrySnapshot
 from .prompts import (
     SYSTEM_PROMPT,
     CORRUPTED_KERNEL_SYSTEM_PROMPT,
+    AUTO_TYPING_SYSTEM_PROMPT,
+    build_auto_typing_prompt,
     build_telemetry_prompt,
     build_corrupted_command_prompt,
 )
@@ -100,6 +102,52 @@ class AIEngine:
                 self._ollama_connected = False
 
         return self._procedural_terminal_fallback(command, cwd)
+
+    def generate_auto_typing_payload(self, snapshot: TelemetrySnapshot) -> str:
+        """Generate harmless text for the visual idle terminal animation."""
+        if self._ollama_connected is None:
+            self.check_connection()
+
+        if self._ollama_connected:
+            try:
+                prompt = build_auto_typing_prompt(
+                    window_title=snapshot.window.title,
+                    process_name=snapshot.window.process_name,
+                    idle_seconds=snapshot.activity.idle_seconds,
+                )
+                response = ollama.Client().chat(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": AUTO_TYPING_SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt},
+                    ],
+                    options={"temperature": 0.9, "num_predict": 55},
+                )
+                content = response["message"]["content"].strip()
+                lines = [
+                    line.strip()
+                    for line in content.splitlines()
+                    if line.strip() and not line.strip().startswith("```")
+                ]
+                if lines:
+                    return "\n".join(lines[:6])[:240]
+            except Exception:
+                self._ollama_connected = False
+
+        return self._procedural_auto_typing_fallback(snapshot)
+
+    def _procedural_auto_typing_fallback(self, snapshot: TelemetrySnapshot) -> str:
+        """Return a deterministic-safe fallback when the local model is unavailable."""
+        fragments = [
+            "# idle observer: cursor absent",
+            "trace = memory.peek(0x0B5E5510)",
+            "if silence > threshold:",
+            "    print('the prompt remembers you')",
+            "checksum = 'not_a_command'",
+        ]
+        if snapshot.window.is_editor:
+            fragments[0] = "# unsaved thought detected beneath the syntax"
+        return "\n".join(fragments)
 
     def _procedural_terminal_fallback(self, command: str, cwd: str) -> str:
         """Procedural corrupted kernel generator when local LLM is unavailable."""
@@ -223,4 +271,3 @@ class AIEngine:
         ])
 
         return random.choice(candidates)
-

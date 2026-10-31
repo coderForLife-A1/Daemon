@@ -75,6 +75,9 @@ class DaemonTrayIcon(QSystemTrayIcon):
         act_term = test_menu.addAction("Terminal Injection")
         act_term.triggered.connect(lambda: self.orchestrator.trigger_terminal_injection("git status"))
 
+        act_auto_typing = test_menu.addAction("Ghost Auto-Typing")
+        act_auto_typing.triggered.connect(self.orchestrator.trigger_auto_typing)
+
         menu.addSeparator()
 
         # Pause toggle
@@ -116,4 +119,3 @@ class DaemonTrayIcon(QSystemTrayIcon):
     def _exit_app(self) -> None:
         self.orchestrator.stop()
         QApplication.quit()
-

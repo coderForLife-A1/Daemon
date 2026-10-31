@@ -19,6 +19,7 @@ does not require a cloud service or API key.
 - Procedural audio synthesis with configurable volume.
 - Optional local LLM support through [Ollama](https://ollama.com/).
 - System-tray controls and a headless fallback when no tray is available.
+- A visual-only, semi-transparent ghost terminal that types harmless generated fragments while idle.
 - Command-line options for testing effects and overriding configuration.
 
 ## How it works
@@ -94,7 +95,7 @@ Useful command-line options:
 | `--threshold VALUE` | Override the anomaly threshold (`0.0`–`1.0`). |
 | `--no-audio` | Disable audio synthesis for the current run. |
 | `--no-overlay` | Run telemetry and orchestration without the visual overlay. |
-| `--test-anomaly TYPE` | Trigger `whisper`, `crawler`, `glitch`, or `watcher` on startup. |
+| `--test-anomaly TYPE` | Trigger `whisper`, `crawler`, `glitch`, `watcher`, `terminal`, or `auto_typing` on startup. |
 | `--debug` | Enable verbose diagnostic telemetry output. |
 
 For example, to test an effect without audio:
@@ -122,6 +123,12 @@ are:
 | `anomaly_cooldown_seconds` | Minimum delay between major anomalies. |
 | `sound_volume` | Master volume from `0.0` to `1.0`. |
 | `debug_mode` | Enable diagnostic telemetry logging. |
+| `enable_auto_typing` | Show the visual-only ghost terminal during an idle anomaly. |
+| `auto_typing_interval_ms` | Milliseconds between simulated ghost keystrokes. |
+
+The auto-typing terminal is intentionally isolated from the real shell: it is
+read-only, never focuses or executes commands, and can be closed like any
+other window.
 
 The configuration is validated with Pydantic. Invalid or missing configuration
 files fall back to the built-in defaults.
