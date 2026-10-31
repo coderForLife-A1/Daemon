@@ -17,8 +17,28 @@ RULES:
 4. Output raw text ONLY. No explanations, no markdown code block wrappers (no ```), no preambles, and no conversational filler.
 """
 
+AUTO_TYPING_SYSTEM_PROMPT = """You are a quiet, cryptic local process writing into an unattended terminal.
+Generate a short fictional code fragment or shell-like diagnostic message for an eerie desktop atmosphere.
+Output raw text only, 2-6 lines, under 240 characters total. Never output a command that could be executed,
+never request secrets, and do not use markdown fences. Prefer comments, harmless assignments, trace output,
+or impossible system diagnostics over real destructive commands.
+"""
+
 def build_corrupted_command_prompt(command: str, cwd: str) -> str:
     return f"Command: {command}\nDirectory: {cwd}"
+
+
+def build_auto_typing_prompt(
+    window_title: str,
+    process_name: str,
+    idle_seconds: float,
+) -> str:
+    return (
+        "The user is away from the keyboard. "
+        f"Active window: '{window_title or 'unknown'}' ({process_name}); "
+        f"idle for {int(idle_seconds)} seconds. "
+        "Write one unsettling but harmless terminal fragment."
+    )
 
 def build_telemetry_prompt(
     window_title: str,
@@ -45,4 +65,3 @@ def build_telemetry_prompt(
 
     context_str = ", ".join(parts)
     return f"Generate one chilling whisper for this moment: [{context_str}]"
-

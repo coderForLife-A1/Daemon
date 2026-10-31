@@ -8,5 +8,7 @@
   "idle_threshold_seconds": 15.0,
   "anomaly_cooldown_seconds": 25.0,
   "sound_volume": 0.35,
-  "debug_mode": false
+  "debug_mode": false,
+  "enable_auto_typing": true,
+  "auto_typing_interval_ms": 90
 }

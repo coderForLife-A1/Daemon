@@ -17,6 +17,8 @@ class DaemonConfig(BaseModel):
     anomaly_cooldown_seconds: float = Field(default=25.0, ge=3.0, le=300.0, description="Minimum seconds between major anomalies")
     sound_volume: float = Field(default=0.35, ge=0.0, le=1.0, description="Master audio volume")
     debug_mode: bool = Field(default=False, description="Enable verbose diagnostic telemetry logs")
+    enable_auto_typing: bool = Field(default=True, description="Show a visual-only typed terminal when idle")
+    auto_typing_interval_ms: int = Field(default=90, ge=20, le=1000, description="Delay between ghost terminal keystrokes")
 
     @classmethod
     def load(cls, path: str | Path = "config.json") -> "DaemonConfig":

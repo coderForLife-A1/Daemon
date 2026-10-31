@@ -1,8 +1,13 @@
 """Unit tests for the Terminal Injection subsystem."""
 
 from PySide6.QtWidgets import QApplication
-from daemon.ai.prompts import build_corrupted_command_prompt, CORRUPTED_KERNEL_SYSTEM_PROMPT
-from daemon.terminal import TerminalInterceptor
+from daemon.ai.prompts import (
+    AUTO_TYPING_SYSTEM_PROMPT,
+    CORRUPTED_KERNEL_SYSTEM_PROMPT,
+    build_auto_typing_prompt,
+    build_corrupted_command_prompt,
+)
+from daemon.terminal import GhostTerminalWindow, TerminalInterceptor
 from daemon.config import DaemonConfig
 from daemon.orchestrator import DaemonOrchestrator
 from daemon.ui import DaemonDashboard
@@ -63,6 +68,33 @@ def test_orchestrator_terminal_injection():
     assert len(res.splitlines()) <= 4
     assert len(emitted) == 1
     assert emitted[0][0] == "terminal"
+
+
+def test_auto_typing_payload_is_harmless_and_contextual():
+    app = QApplication.instance() or QApplication([])
+    config = DaemonConfig(auto_typing_interval_ms=20)
+    orchestrator = DaemonOrchestrator(config=config)
+    payload = orchestrator.trigger_auto_typing()
+
+    assert payload
+    assert len(payload) <= 240
+    assert "harmless assignments" in AUTO_TYPING_SYSTEM_PROMPT
+    assert "The user is away" in build_auto_typing_prompt("Code", "code.exe", 20)
+    assert orchestrator._ghost_terminal.isVisible()
+    assert orchestrator._ghost_terminal.editor.toPlainText().startswith("ghost@daemon:~$ ")
+
+    orchestrator.stop()
+
+
+def test_ghost_terminal_types_one_character_per_tick():
+    app = QApplication.instance() or QApplication([])
+    window = GhostTerminalWindow("abc", interval_ms=20)
+    window.start_typing()
+
+    assert window.editor.toPlainText() == "ghost@daemon:~$ "
+    window._type_next_character()
+    assert window.editor.toPlainText().endswith("a")
+    window.close()
 
 
 def test_dashboard_terminal_injection():

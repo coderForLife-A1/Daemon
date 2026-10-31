@@ -10,7 +10,7 @@ from ..telemetry import TelemetryHub, TelemetrySnapshot
 from ..ai import AIEngine
 from ..audio import AudioSynth
 from ..overlay import OverlayCanvas
-from ..terminal import TerminalInterceptor
+from ..terminal import GhostTerminalWindow, TerminalInterceptor
 from .state import OrchestratorStateMachine, HauntState
 
 
@@ -46,6 +46,7 @@ class DaemonOrchestrator(QObject):
         self.is_paused = False
         self._timer: Optional[QTimer] = None
         self._last_snapshot: Optional[TelemetrySnapshot] = None
+        self._ghost_terminal: Optional[GhostTerminalWindow] = None
 
     def start(self) -> None:
         """Start the live orchestration loop and audio engine."""
@@ -63,14 +64,22 @@ class DaemonOrchestrator(QObject):
             self._timer.stop()
             self._timer = None
 
+        if self._ghost_terminal:
+            self._ghost_terminal.close()
+            self._ghost_terminal = None
+
         if self.synth:
             self.synth.stop()
 
     def toggle_pause(self) -> bool:
         """Toggle pause state for anomalies and ambient sound."""
         self.is_paused = not self.is_paused
-        if self.is_paused and self.canvas:
-            self.canvas.clear_all()
+        if self.is_paused:
+            if self.canvas:
+                self.canvas.clear_all()
+            if self._ghost_terminal:
+                self._ghost_terminal.close()
+                self._ghost_terminal = None
         return self.is_paused
 
     def _cycle(self) -> None:
@@ -109,10 +118,13 @@ class DaemonOrchestrator(QObject):
         """Select and trigger an organic anomaly based on current telemetry context."""
         choices = ["whisper", "crawler", "glitch", "watcher"]
         weights = [0.35, 0.25, 0.20, 0.20]
+        if self.config.enable_auto_typing:
+            choices.append("auto_typing")
+            weights = [0.30, 0.20, 0.15, 0.15, 0.20]
 
         # Bias towards whisper if user is editing or reading
         if snapshot.window.is_editor or snapshot.window.is_browser:
-            weights = [0.50, 0.20, 0.15, 0.15]
+            weights = [0.40, 0.15, 0.10, 0.10, 0.25] if self.config.enable_auto_typing else [0.50, 0.20, 0.15, 0.15]
 
         choice = random.choices(choices, weights=weights, k=1)[0]
 
@@ -124,6 +136,8 @@ class DaemonOrchestrator(QObject):
             self.trigger_glitch()
         elif choice == "watcher":
             self.trigger_watcher()
+        elif choice == "auto_typing" and self.config.enable_auto_typing:
+            self.trigger_auto_typing(snapshot)
 
     def trigger_whisper(self, snapshot: Optional[TelemetrySnapshot] = None) -> str:
         """Generate and display an eerie contextual whisper."""
@@ -182,3 +196,17 @@ class DaemonOrchestrator(QObject):
         self.anomaly_triggered.emit("terminal", f"Injected into '{command}'")
         return corrupted
 
+    def trigger_auto_typing(self, snapshot: Optional[TelemetrySnapshot] = None) -> str:
+        """Open a harmless ghost terminal and type a locally generated fragment."""
+        snap = snapshot or (self._last_snapshot or self.telemetry.capture())
+        payload = self.ai.generate_auto_typing_payload(snap)
+
+        if self._ghost_terminal:
+            self._ghost_terminal.close()
+        self._ghost_terminal = GhostTerminalWindow(
+            text=payload,
+            interval_ms=self.config.auto_typing_interval_ms,
+        )
+        self._ghost_terminal.start_typing()
+        self.anomaly_triggered.emit("auto_typing", "Ghost terminal typing started")
+        return payload
